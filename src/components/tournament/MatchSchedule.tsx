@@ -32,6 +32,20 @@ export function MatchSchedule() {
   
   const currentRoundIdlePlayers = tournament.idleHistory[roundToView] || [];
   
+  const isCurrentRound = roundToView === tournament.currentRound;
+  
+  const goToNextRound = () => {
+    if (roundToView < tournament.totalRounds) {
+      setViewingRound(roundToView + 1);
+    }
+  };
+
+  const goToPreviousRound = () => {
+    if (roundToView > 0) {
+      setViewingRound(roundToView - 1);
+    }
+  };
+  
   const getPlayerName = (playerId: string) => {
     const player = tournament.players.find(p => p.id === playerId);
     return player?.name || 'Unknown';
@@ -149,72 +163,94 @@ export function MatchSchedule() {
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-2xl shadow-xl p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-3">
-            <Calendar className="w-6 h-6 text-emerald-600" />
-            <h2 className="text-2xl font-bold text-gray-900">
-              Round {roundToView} of {tournament.totalRounds}
-              {roundToView < tournament.currentRound && ' (Completed)'}
-              {roundToView > tournament.currentRound && ' (Upcoming)'}
-            </h2>
-          </div>
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
+        <div className="space-y-3 mb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Calendar className="w-6 h-6 text-emerald-600" />
+              <h2 className="text-2xl font-bold text-gray-900">
+                Round {roundToView} of {tournament.totalRounds}
+                {roundToView < tournament.currentRound && ' (Completed)'}
+                {roundToView > tournament.currentRound && ' (Upcoming)'}
+              </h2>
+            </div>
+            
+            {/* Mobile Navigation */}
+            <div className="flex sm:hidden space-x-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setViewingRound(Math.max(1, roundToView - 1))}
-                disabled={roundToView === 1}
+                onClick={goToPreviousRound}
+                disabled={roundToView === 0}
+                className="!p-2"
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
-              
-              <select
-                value={roundToView}
-                onChange={(e) => setViewingRound(Number(e.target.value))}
-                className="rounded-md border-gray-300 py-1.5 text-sm text-gray-700 focus:border-emerald-500 focus:ring-emerald-500"
-              >
-                {Array.from({ length: tournament.totalRounds }, (_, i) => i + 1).map((round) => (
-                  <option key={round} value={round}>
-                    Round {round}
-                  </option>
-                ))}
-              </select>
-              
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setViewingRound(Math.min(tournament.totalRounds, roundToView + 1))}
-                disabled={roundToView === tournament.totalRounds}
+                onClick={goToNextRound}
+                disabled={roundToView >= tournament.currentRound}
+                className="!p-2"
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
+          </div>
+
+          {/* Actions Row */}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center space-x-2 text-sm text-gray-600 bg-gray-50 px-3 py-1.5 rounded-md">
+              <Trophy className="w-4 h-4 flex-shrink-0" />
+              <span className="whitespace-nowrap">{completedMatches} / {totalMatches} matches</span>
+            </div>
             
-            {roundToView === tournament.currentRound && (
-              <>
+            <div className="flex items-center gap-2">
+              {/* Desktop Navigation */}
+              <div className="hidden sm:flex space-x-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  icon={Edit3}
-                  onClick={openEditModal}
+                  onClick={goToPreviousRound}
+                  disabled={roundToView === 0}
+                  className="!p-2"
                 >
-                  Edit Round
+                  <ChevronLeft className="w-4 h-4" />
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  icon={RotateCcw}
-                  onClick={regenerateRound}
+                  onClick={goToNextRound}
+                  disabled={roundToView >= tournament.currentRound}
+                  className="!p-2"
                 >
-                  Regenerate
+                  <ChevronRight className="w-4 h-4" />
                 </Button>
-              </>
-            )}
-            
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <Trophy className="w-4 h-4" />
-              <span>{completedMatches} / {totalMatches} matches completed</span>
+              </div>
+              
+              {isCurrentRound && (
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={openEditModal}
+                    className="whitespace-nowrap flex items-center gap-1"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    <span className="hidden sm:inline">Edit Round</span>
+                    <span className="sm:hidden">Edit</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={regenerateRound}
+                    className="whitespace-nowrap flex items-center gap-1"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    <span className="hidden sm:inline">Regenerate</span>
+                    <span className="sm:hidden">Reroll</span>
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -289,65 +325,74 @@ export function MatchSchedule() {
                 </div>
               </div>
               
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-600">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="grid grid-cols-2 gap-3 w-full sm:w-auto">
+                  <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                    <span className="text-sm text-gray-600 whitespace-nowrap">
                       {match.isDoubles ? 'Team 1' : getPlayerName(match.players[0])}:
                     </span>
-                    <Input
-                      type="number"
-                      value={match.scores[0]}
-                      onChange={(val) => handleScoreChange(match.id, 0, val)}
-                      disabled={match.isCompleted && editingMatch !== match.id}
-                      className="w-16"
-                    />
+                    <div className="flex-1">
+                      <Input
+                        type="number"
+                        value={match.scores[0]}
+                        onChange={(val) => handleScoreChange(match.id, 0, val)}
+                        disabled={match.isCompleted && editingMatch !== match.id}
+                        className="w-full sm:w-16"
+                      />
+                    </div>
                   </div>
                   
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-600">
+                  <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                    <span className="text-sm text-gray-600 whitespace-nowrap">
                       {match.isDoubles ? 'Team 2' : getPlayerName(match.players[1])}:
                     </span>
-                    <Input
-                      type="number"
-                      value={match.scores[1]}
-                      onChange={(val) => handleScoreChange(match.id, 1, val)}
-                      disabled={match.isCompleted && editingMatch !== match.id}
-                      className="w-16"
-                    />
+                    <div className="flex-1">
+                      <Input
+                        type="number"
+                        value={match.scores[1]}
+                        onChange={(val) => handleScoreChange(match.id, 1, val)}
+                        disabled={match.isCompleted && editingMatch !== match.id}
+                        className="w-full sm:w-16"
+                      />
+                    </div>
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-2">
-                  {match.isCompleted && editingMatch !== match.id ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setEditingMatch(match.id)}
-                    >
-                      Edit
-                    </Button>
-                  ) : (
-                    <>
+                <div className="flex justify-end sm:justify-start mt-2 sm:mt-0">
+                  <div className="flex items-center space-x-2">
+                    {match.isCompleted && editingMatch !== match.id ? (
                       <Button
-                        variant="success"
+                        variant="outline"
                         size="sm"
-                        onClick={() => handleValidateMatch(match.id)}
-                        disabled={match.scores[0] === 0 && match.scores[1] === 0}
+                        onClick={() => setEditingMatch(match.id)}
+                        className="w-full sm:w-auto"
                       >
-                        {match.isCompleted ? 'Save' : 'Validate'}
+                        Edit
                       </Button>
-                      {match.isCompleted && editingMatch === match.id && (
+                    ) : (
+                      <>
                         <Button
-                          variant="outline"
+                          variant="success"
                           size="sm"
-                          onClick={() => setEditingMatch(null)}
+                          onClick={() => handleValidateMatch(match.id)}
+                          disabled={match.scores[0] === 0 && match.scores[1] === 0}
+                          className="w-full sm:w-auto"
                         >
-                          Cancel
+                          {match.isCompleted ? 'Save' : 'Validate'}
                         </Button>
-                      )}
-                    </>
-                  )}
+                        {match.isCompleted && editingMatch === match.id && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setEditingMatch(null)}
+                            className="w-full sm:w-auto"
+                          >
+                            Cancel
+                          </Button>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
