@@ -20,6 +20,7 @@ import {
   calculatePlayerPoints
 } from '../utils/matchmaking';
 import { debounce } from '../utils/debounce';
+import { normalizeScoreForStats } from '../utils/scoreValidation';
 
 type TournamentAction =
   | { type: 'SET_TOURNAMENT'; payload: Tournament }
@@ -100,7 +101,7 @@ function tournamentReducer(state: TournamentState, action: TournamentAction): To
           return playerMatches.reduce((acc, match) => {
             const playerIndex = match.players.indexOf(player.id);
             if (playerIndex === -1) return acc;
-            
+
             let playerScore, opponentScore;
             if (match.isDoubles) {
               const isTeam1 = playerIndex < 2;
@@ -110,12 +111,19 @@ function tournamentReducer(state: TournamentState, action: TournamentAction): To
               playerScore = match.scores[playerIndex];
               opponentScore = match.scores[1 - playerIndex];
             }
-            
+
+            // Normalize scores for stats (cap at pointsToWin)
+            const normalized = normalizeScoreForStats(
+              playerScore,
+              opponentScore,
+              state.tournament!.matchFormat
+            );
+
             const isWin = playerScore > opponentScore;
             return updatePlayerStats(
               acc,
-              playerScore,
-              opponentScore,
+              normalized.normalizedPlayerScore,
+              normalized.normalizedOpponentScore,
               isWin
             );
           }, {
@@ -141,7 +149,7 @@ function tournamentReducer(state: TournamentState, action: TournamentAction): To
       const updatedPlayers = playersAfterReset.map(player => {
         const playerIndex = matchToValidate.players.indexOf(player.id);
         if (playerIndex === -1) return player;
-        
+
         let playerScore, opponentScore;
         if (matchToValidate.isDoubles) {
           // For doubles, we need to handle team scores
@@ -152,12 +160,19 @@ function tournamentReducer(state: TournamentState, action: TournamentAction): To
           playerScore = matchToValidate.scores[playerIndex];
           opponentScore = matchToValidate.scores[1 - playerIndex];
         }
-        
+
+        // Normalize scores for stats (cap at pointsToWin)
+        const normalized = normalizeScoreForStats(
+          playerScore,
+          opponentScore,
+          state.tournament!.matchFormat
+        );
+
         const isWin = playerScore > opponentScore;
         return updatePlayerStats(
           player,
-          playerScore,
-          opponentScore,
+          normalized.normalizedPlayerScore,
+          normalized.normalizedOpponentScore,
           isWin
         );
       });

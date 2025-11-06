@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Minus, Play, Users, Trophy, Upload } from 'lucide-react';
+import { Plus, Minus, Play, Users, Trophy, Upload, List, Trash2 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { useTournament } from '../../contexts/TournamentContext';
@@ -17,6 +17,8 @@ export function TournamentSetup() {
   const [requireTwoPointLead, setRequireTwoPointLead] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [fileInput, setFileInput] = useState<File | null>(null);
+  const [bulkInput, setBulkInput] = useState('');
+  const [showBulkInput, setShowBulkInput] = useState(false);
   
   const addPlayer = () => {
     setPlayerNames([...playerNames, '']);
@@ -32,6 +34,34 @@ export function TournamentSetup() {
     const updated = [...playerNames];
     updated[index] = name;
     setPlayerNames(updated);
+  };
+
+  const handleBulkImport = () => {
+    const names = bulkInput
+      .split('\n')
+      .map(name => name.trim())
+      .filter(name => name !== '');
+
+    if (names.length === 0) {
+      showError('Please enter at least one player name');
+      return;
+    }
+
+    // Remove duplicates
+    const uniqueNames = Array.from(new Set(names));
+
+    if (uniqueNames.length !== names.length) {
+      showError(`Removed ${names.length - uniqueNames.length} duplicate name(s)`);
+    }
+
+    setPlayerNames(uniqueNames);
+    setBulkInput('');
+    setShowBulkInput(false);
+    showSuccess(`Added ${uniqueNames.length} player(s) successfully!`);
+  };
+
+  const clearAllPlayers = () => {
+    setPlayerNames(['', '']);
   };
   
   const handleSubmit = (e: React.FormEvent) => {
@@ -165,38 +195,61 @@ export function TournamentSetup() {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <label className="block text-sm font-medium text-gray-700">
-                  Players ({playerNames.filter(name => name.trim() !== '').length})
+                  Players <span className="text-emerald-600 font-bold">({playerNames.filter(name => name.trim() !== '').length})</span>
                 </label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  icon={Plus}
-                  onClick={addPlayer}
-                >
-                  Add Player
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    icon={List}
+                    onClick={() => setShowBulkInput(true)}
+                  >
+                    Bulk Import
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    icon={Plus}
+                    onClick={addPlayer}
+                  >
+                    Add One
+                  </Button>
+                  {playerNames.length > 2 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      icon={Trash2}
+                      onClick={clearAllPlayers}
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </div>
               </div>
-              
-              <div className="space-y-3 max-h-64 overflow-y-auto">
+
+              {/* Player Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-80 overflow-y-auto p-2 bg-gray-50 rounded-lg border-2 border-gray-200">
                 {playerNames.map((name, index) => (
-                  <div key={index} className="flex items-center space-x-2">
+                  <div key={index} className="flex items-center space-x-2 bg-white p-2 rounded-md shadow-sm">
+                    <span className="text-xs font-semibold text-gray-500 w-6">#{index + 1}</span>
                     <Input
                       value={name}
                       onChange={(val) => updatePlayerName(index, val)}
-                      placeholder={`Player ${index + 1} name`}
+                      placeholder={`Player ${index + 1}`}
                       className="flex-1"
                     />
                     {playerNames.length > 2 && (
-                      <Button
+                      <button
                         type="button"
-                        variant="outline"
-                        size="sm"
-                        icon={Minus}
                         onClick={() => removePlayer(index)}
+                        className="p-1 hover:bg-red-50 rounded transition-colors"
+                        aria-label="Remove player"
                       >
-                        Remove
-                      </Button>
+                        <Minus className="w-4 h-4 text-red-600" />
+                      </button>
                     )}
                   </div>
                 ))}
@@ -270,6 +323,60 @@ export function TournamentSetup() {
               disabled={!fileInput}
             >
               Import
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Bulk Import Modal */}
+      <Modal
+        isOpen={showBulkInput}
+        onClose={() => setShowBulkInput(false)}
+        title="Bulk Import Players"
+        size="lg"
+      >
+        <div className="space-y-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 className="font-semibold text-blue-800 mb-2">How to use</h4>
+            <ul className="text-sm text-blue-700 space-y-1">
+              <li>• Enter one player name per line</li>
+              <li>• Empty lines will be ignored</li>
+              <li>• Duplicate names will be automatically removed</li>
+              <li>• This will replace your current player list</li>
+            </ul>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Player Names (one per line)
+            </label>
+            <textarea
+              value={bulkInput}
+              onChange={(e) => setBulkInput(e.target.value)}
+              placeholder="Alice&#10;Bob&#10;Charlie&#10;Diana"
+              className="w-full h-64 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-sm"
+            />
+            <p className="mt-1 text-sm text-gray-500">
+              {bulkInput.split('\n').filter(name => name.trim() !== '').length} player(s) detected
+            </p>
+          </div>
+
+          <div className="flex justify-end space-x-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setBulkInput('');
+                setShowBulkInput(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleBulkImport}
+              disabled={bulkInput.trim() === ''}
+            >
+              Import Players
             </Button>
           </div>
         </div>

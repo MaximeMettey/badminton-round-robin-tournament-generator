@@ -4,9 +4,12 @@ import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Modal } from '../ui/Modal';
 import { useTournament } from '../../contexts/TournamentContext';
+import { useToast } from '../../contexts/ToastContext';
+import { validateMatchScore } from '../../utils/scoreValidation';
 
 export function MatchSchedule() {
   const { state, updateScore, validateMatch, updateMatchPlayers, updateIdlePlayers, regenerateRoundMatches } = useTournament();
+  const { showError } = useToast();
   const [editingMatch, setEditingMatch] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingRound, setEditingRound] = useState<number | null>(null);
@@ -66,9 +69,24 @@ export function MatchSchedule() {
   };
   
   const handleValidateMatch = (matchId: string) => {
+    const match = tournament.matches.find(m => m.id === matchId);
+    if (!match) return;
+
+    // Validate the score according to tournament rules
+    const validation = validateMatchScore(
+      match.scores[0],
+      match.scores[1],
+      tournament.matchFormat
+    );
+
+    if (!validation.isValid) {
+      showError(validation.error || 'Invalid score');
+      return;
+    }
+
     validateMatch(matchId);
     setEditingMatch(null);
-    
+
     // If we're in a different round than the current one, update the viewing round
     if (viewingRound !== null && viewingRound !== state.tournament?.currentRound) {
       setViewingRound(state.tournament?.currentRound || viewingRound);
