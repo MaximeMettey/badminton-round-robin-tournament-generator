@@ -11,6 +11,7 @@ export function TournamentSetup() {
   const { showError, showSuccess } = useToast();
   const [tournamentName, setTournamentName] = useState('');
   const [playerNames, setPlayerNames] = useState<string[]>(['', '']);
+  const [playerLevels, setPlayerLevels] = useState<number[]>([3, 3]);
   const [mode, setMode] = useState<'singles' | 'doubles'>('singles');
   const [totalRounds, setTotalRounds] = useState(3);
   const [pointsToWin, setPointsToWin] = useState(21);
@@ -22,18 +23,26 @@ export function TournamentSetup() {
   
   const addPlayer = () => {
     setPlayerNames([...playerNames, '']);
+    setPlayerLevels([...playerLevels, 3]); // Default level 3
   };
-  
+
   const removePlayer = (index: number) => {
     if (playerNames.length > 2) {
       setPlayerNames(playerNames.filter((_, i) => i !== index));
+      setPlayerLevels(playerLevels.filter((_, i) => i !== index));
     }
   };
-  
+
   const updatePlayerName = (index: number, name: string) => {
     const updated = [...playerNames];
     updated[index] = name;
     setPlayerNames(updated);
+  };
+
+  const updatePlayerLevel = (index: number, level: number) => {
+    const updated = [...playerLevels];
+    updated[index] = level;
+    setPlayerLevels(updated);
   };
 
   const handleBulkImport = () => {
@@ -55,6 +64,7 @@ export function TournamentSetup() {
     }
 
     setPlayerNames(uniqueNames);
+    setPlayerLevels(uniqueNames.map(() => 3)); // Default all to level 3
     setBulkInput('');
     setShowBulkInput(false);
     showSuccess(`Added ${uniqueNames.length} player(s) successfully!`);
@@ -62,6 +72,7 @@ export function TournamentSetup() {
 
   const clearAllPlayers = () => {
     setPlayerNames(['', '']);
+    setPlayerLevels([3, 3]);
   };
   
   const handleSubmit = (e: React.FormEvent) => {
@@ -83,9 +94,16 @@ export function TournamentSetup() {
       return;
     }
 
+    // Filter levels to match valid names
+    const validLevels = playerNames
+      .map((name, index) => ({ name, level: playerLevels[index] || 3 }))
+      .filter(item => item.name.trim() !== '')
+      .map(item => item.level);
+
     createTournament(
       tournamentName.trim(),
       validNames,
+      validLevels,
       mode,
       totalRounds,
       { pointsToWin, requireTwoPointLead }
@@ -231,26 +249,47 @@ export function TournamentSetup() {
               </div>
 
               {/* Player Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-80 overflow-y-auto p-2 bg-gray-50 rounded-lg border-2 border-gray-200">
+              <div className="grid grid-cols-1 gap-3 max-h-80 overflow-y-auto p-2 bg-gray-50 rounded-lg border-2 border-gray-200">
                 {playerNames.map((name, index) => (
-                  <div key={index} className="flex items-center space-x-2 bg-white p-2 rounded-md shadow-sm">
-                    <span className="text-xs font-semibold text-gray-500 w-6">#{index + 1}</span>
-                    <Input
-                      value={name}
-                      onChange={(val) => updatePlayerName(index, val)}
-                      placeholder={`Player ${index + 1}`}
-                      className="flex-1"
-                    />
-                    {playerNames.length > 2 && (
-                      <button
-                        type="button"
-                        onClick={() => removePlayer(index)}
-                        className="p-1 hover:bg-red-50 rounded transition-colors"
-                        aria-label="Remove player"
-                      >
-                        <Minus className="w-4 h-4 text-red-600" />
-                      </button>
-                    )}
+                  <div key={index} className="bg-white p-3 rounded-md shadow-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs font-bold text-gray-500">#{index + 1}</span>
+                      <Input
+                        value={name}
+                        onChange={(val) => updatePlayerName(index, val)}
+                        placeholder={`Player ${index + 1} name`}
+                        className="flex-1"
+                      />
+                      {playerNames.length > 2 && (
+                        <button
+                          type="button"
+                          onClick={() => removePlayer(index)}
+                          className="p-1 hover:bg-red-50 rounded transition-colors flex-shrink-0"
+                          aria-label="Remove player"
+                        >
+                          <Minus className="w-4 h-4 text-red-600" />
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 ml-6">
+                      <label className="text-xs font-medium text-gray-600 w-12">Level:</label>
+                      <div className="flex gap-1 flex-1">
+                        {[1, 2, 3, 4, 5].map((level) => (
+                          <button
+                            key={level}
+                            type="button"
+                            onClick={() => updatePlayerLevel(index, level)}
+                            className={`flex-1 px-2 py-1 rounded text-xs font-semibold transition-all border-2 ${
+                              playerLevels[index] === level
+                                ? 'bg-emerald-600 text-white border-emerald-600 scale-110'
+                                : 'bg-white text-gray-600 border-gray-300 hover:border-emerald-400'
+                            }`}
+                          >
+                            {level}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>

@@ -1,6 +1,7 @@
 export interface Player {
   id: string;
   name: string;
+  level: number; // 1 (weakest) to 5 (strongest)
   points: number;
   matchesPlayed: number;
   wins: number;
@@ -51,6 +52,7 @@ export interface TournamentContextType {
   createTournament: (
     name: string,
     playerNames: string[],
+    playerLevels: number[],
     mode: 'singles' | 'doubles',
     totalRounds: number,
     matchFormat: { pointsToWin: number; requireTwoPointLead: boolean }
@@ -60,7 +62,7 @@ export interface TournamentContextType {
   updateMatchPlayers: (matchId: string, players: string[]) => void;
   updateIdlePlayers: (round: number, players: string[]) => void;
   regenerateRoundMatches: (round: number) => void;
-  addPlayer: (name: string) => void;
+  addPlayer: (name: string, level: number) => void;
   removePlayer: (playerId: string) => void;
   exportTournament: () => void;
   importTournament: (file: File) => Promise<void>;

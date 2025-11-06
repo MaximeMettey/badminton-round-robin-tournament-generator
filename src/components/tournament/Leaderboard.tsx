@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Trophy, Medal, Award, TrendingUp } from 'lucide-react';
 import { useTournament } from '../../contexts/TournamentContext';
+import { getLevelLabel, getLevelColor } from '../../utils/levelSystem';
 
 export function Leaderboard() {
   const { state } = useTournament();
@@ -60,6 +61,7 @@ export function Leaderboard() {
             <tr className="border-b border-gray-200">
               <th className="text-left py-3 px-2 font-semibold text-gray-700">Rank</th>
               <th className="text-left py-3 px-2 font-semibold text-gray-700">Player</th>
+              <th className="text-center py-3 px-2 font-semibold text-gray-700">Level</th>
               <th className="text-center py-3 px-2 font-semibold text-gray-700">Matches</th>
               <th className="text-center py-3 px-2 font-semibold text-gray-700">Wins</th>
               <th className="text-center py-3 px-2 font-semibold text-gray-700">Total Scored</th>
@@ -82,6 +84,11 @@ export function Leaderboard() {
                   </td>
                   <td className="py-4 px-2">
                     <div className="font-medium text-gray-900">{player.name}</div>
+                  </td>
+                  <td className="py-4 px-2 text-center">
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold border-2 ${getLevelColor(player.level)}`}>
+                      ★ {player.level}
+                    </span>
                   </td>
                   <td className="py-4 px-2 text-center">
                     <div className="text-gray-700">{player.matchesPlayed}</div>

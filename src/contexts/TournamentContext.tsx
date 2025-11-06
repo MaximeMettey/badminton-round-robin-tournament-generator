@@ -334,13 +334,15 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
   const createTournament = (
     name: string,
     playerNames: string[],
+    playerLevels: number[],
     mode: 'singles' | 'doubles',
     totalRounds: number,
     matchFormat: { pointsToWin: number; requireTwoPointLead: boolean }
   ) => {
-    const players: Player[] = playerNames.map(name => ({
+    const players: Player[] = playerNames.map((name, index) => ({
       id: uuidv4(),
       name,
+      level: playerLevels[index] || 3, // Default to level 3 if not specified
       points: 0,
       matchesPlayed: 0,
       wins: 0,
@@ -409,10 +411,11 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
     });
   };
   
-  const addPlayer = (name: string) => {
+  const addPlayer = (name: string, level: number = 3) => {
     const player: Player = {
       id: uuidv4(),
       name,
+      level,
       points: 0,
       matchesPlayed: 0,
       wins: 0,

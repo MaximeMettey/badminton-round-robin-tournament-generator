@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Calendar, Users, Trophy, CheckCircle2, Clock, Coffee, Edit3, Save, X, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import { ScoreInput } from '../ui/ScoreInput';
 import { Modal } from '../ui/Modal';
 import { useTournament } from '../../contexts/TournamentContext';
 import { useToast } from '../../contexts/ToastContext';
@@ -346,31 +347,29 @@ export function MatchSchedule() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="grid grid-cols-2 gap-3 w-full sm:w-auto">
                   <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
-                    <span className="text-sm text-gray-600 whitespace-nowrap">
+                    <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
                       {match.isDoubles ? 'Team 1' : getPlayerName(match.players[0])}:
                     </span>
                     <div className="flex-1">
-                      <Input
-                        type="number"
+                      <ScoreInput
                         value={match.scores[0]}
                         onChange={(val) => handleScoreChange(match.id, 0, val)}
                         disabled={match.isCompleted && editingMatch !== match.id}
-                        className="w-full sm:w-16"
+                        className="w-full sm:w-20"
                       />
                     </div>
                   </div>
-                  
+
                   <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
-                    <span className="text-sm text-gray-600 whitespace-nowrap">
+                    <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
                       {match.isDoubles ? 'Team 2' : getPlayerName(match.players[1])}:
                     </span>
                     <div className="flex-1">
-                      <Input
-                        type="number"
+                      <ScoreInput
                         value={match.scores[1]}
                         onChange={(val) => handleScoreChange(match.id, 1, val)}
                         disabled={match.isCompleted && editingMatch !== match.id}
-                        className="w-full sm:w-16"
+                        className="w-full sm:w-20"
                       />
                     </div>
                   </div>
