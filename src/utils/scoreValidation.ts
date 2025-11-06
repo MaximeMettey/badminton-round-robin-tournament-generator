@@ -1,6 +1,7 @@
 export interface MatchFormat {
   pointsToWin: number;
   requireTwoPointLead: boolean;
+  maxDeuceScore?: number; // Optional: max score when playing with deuce
 }
 
 export interface ScoreValidationResult {
@@ -13,7 +14,7 @@ export function validateMatchScore(
   score2: number,
   matchFormat: MatchFormat
 ): ScoreValidationResult {
-  const { pointsToWin, requireTwoPointLead } = matchFormat;
+  const { pointsToWin, requireTwoPointLead, maxDeuceScore } = matchFormat;
 
   // Check for negative scores
   if (score1 < 0 || score2 < 0) {
@@ -34,6 +35,7 @@ export function validateMatchScore(
   // Determine winner
   const maxScore = Math.max(score1, score2);
   const minScore = Math.min(score1, score2);
+  const scoreDiff = maxScore - minScore;
 
   // Winner must have at least pointsToWin
   if (maxScore < pointsToWin) {
@@ -45,13 +47,26 @@ export function validateMatchScore(
 
   // If requireTwoPointLead is enabled
   if (requireTwoPointLead) {
-    const scoreDiff = maxScore - minScore;
-
-    // When score is at or above pointsToWin, must have 2-point lead
-    if (maxScore >= pointsToWin && scoreDiff < 2) {
+    // Check if max deuce score is exceeded
+    if (maxDeuceScore && maxScore > maxDeuceScore) {
       return {
         isValid: false,
-        error: 'Winner must win by at least 2 points',
+        error: `Maximum score is ${maxDeuceScore} (deuce limit)`,
+      };
+    }
+
+    // When score is at or above pointsToWin, must have EXACTLY 2-point lead
+    if (maxScore >= pointsToWin && scoreDiff !== 2) {
+      // Special case: if we've reached maxDeuceScore, allow 1 point difference
+      if (maxDeuceScore && maxScore === maxDeuceScore && scoreDiff === 1) {
+        return { isValid: true };
+      }
+
+      return {
+        isValid: false,
+        error: scoreDiff < 2
+          ? 'Winner must win by exactly 2 points'
+          : 'Winner can only win by exactly 2 points in deuce',
       };
     }
   } else {

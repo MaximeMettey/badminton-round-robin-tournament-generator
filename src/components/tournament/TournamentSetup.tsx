@@ -16,6 +16,7 @@ export function TournamentSetup() {
   const [totalRounds, setTotalRounds] = useState(3);
   const [pointsToWin, setPointsToWin] = useState(21);
   const [requireTwoPointLead, setRequireTwoPointLead] = useState(false);
+  const [maxDeuceScore, setMaxDeuceScore] = useState(30);
   const [showImport, setShowImport] = useState(false);
   const [fileInput, setFileInput] = useState<File | null>(null);
   const [bulkInput, setBulkInput] = useState('');
@@ -106,7 +107,11 @@ export function TournamentSetup() {
       validLevels,
       mode,
       totalRounds,
-      { pointsToWin, requireTwoPointLead }
+      {
+        pointsToWin,
+        requireTwoPointLead,
+        maxDeuceScore: requireTwoPointLead ? maxDeuceScore : undefined
+      }
     );
     showSuccess('Tournament created successfully!');
   };
@@ -187,27 +192,46 @@ export function TournamentSetup() {
               />
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input
-                label="Points to Win"
-                type="number"
-                value={pointsToWin}
-                onChange={(val) => setPointsToWin(Math.max(1, parseInt(val) || 21))}
-                required
-              />
-              
-              <div className="flex items-center space-x-2 pt-6">
-                <input
-                  type="checkbox"
-                  id="twoPointLead"
-                  checked={requireTwoPointLead}
-                  onChange={(e) => setRequireTwoPointLead(e.target.checked)}
-                  className="text-emerald-600 focus:ring-emerald-500"
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Input
+                  label="Points to Win"
+                  type="number"
+                  value={pointsToWin}
+                  onChange={(val) => setPointsToWin(Math.max(1, parseInt(val) || 21))}
+                  required
                 />
-                <label htmlFor="twoPointLead" className="text-sm text-gray-700">
-                  Require 2-point lead
-                </label>
+
+                <div className="flex items-center space-x-2 pt-6">
+                  <input
+                    type="checkbox"
+                    id="twoPointLead"
+                    checked={requireTwoPointLead}
+                    onChange={(e) => setRequireTwoPointLead(e.target.checked)}
+                    className="text-emerald-600 focus:ring-emerald-500"
+                  />
+                  <label htmlFor="twoPointLead" className="text-sm text-gray-700">
+                    Require 2-point lead (deuce)
+                  </label>
+                </div>
               </div>
+
+              {/* Max Deuce Score - Only shown when two-point lead is enabled */}
+              {requireTwoPointLead && (
+                <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+                  <Input
+                    label="Maximum Deuce Score"
+                    type="number"
+                    value={maxDeuceScore}
+                    onChange={(val) => setMaxDeuceScore(Math.max(pointsToWin + 1, parseInt(val) || 30))}
+                    required
+                  />
+                  <p className="text-xs text-blue-700 mt-2">
+                    🏸 At {maxDeuceScore} points, the match ends even with just 1 point difference (e.g., {maxDeuceScore}-{maxDeuceScore - 1}).
+                    For badminton, this is typically 30.
+                  </p>
+                </div>
+              )}
             </div>
             
             <div>

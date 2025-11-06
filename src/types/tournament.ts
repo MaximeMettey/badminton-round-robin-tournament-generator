@@ -35,6 +35,7 @@ export interface Tournament {
   matchFormat: {
     pointsToWin: number;
     requireTwoPointLead: boolean;
+    maxDeuceScore?: number; // Optional: max score when playing with deuce (e.g., 30 for badminton)
   };
   createdAt: Date;
   updatedAt: Date;
@@ -55,7 +56,7 @@ export interface TournamentContextType {
     playerLevels: number[],
     mode: 'singles' | 'doubles',
     totalRounds: number,
-    matchFormat: { pointsToWin: number; requireTwoPointLead: boolean }
+    matchFormat: { pointsToWin: number; requireTwoPointLead: boolean; maxDeuceScore?: number }
   ) => void;
   updateScore: (matchId: string, playerIndex: number, score: number) => void;
   validateMatch: (matchId: string) => void;
