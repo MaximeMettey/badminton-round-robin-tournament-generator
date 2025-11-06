@@ -1,30 +1,35 @@
 import { useState } from 'react';
-import { 
-  Trophy, 
-  Calendar, 
-  Download, 
-  RotateCcw, 
+import {
+  Trophy,
+  Calendar,
+  Download,
+  RotateCcw,
   Settings,
   Plus,
   Minus,
-  ChevronRight
+  ChevronRight,
+  FileText
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Modal } from '../ui/Modal';
+import { ThemeToggle } from '../ui/ThemeToggle';
 import { useTournament } from '../../contexts/TournamentContext';
+import { useToast } from '../../contexts/ToastContext';
 import { MatchSchedule } from './MatchSchedule';
 import { Leaderboard } from './Leaderboard';
+import { exportLeaderboardToCSV, exportMatchHistoryToCSV } from '../../utils/csvExport';
 
 export function TournamentDashboard() {
-  const { 
-    state, 
-    addPlayer, 
-    removePlayer, 
-    exportTournament, 
+  const {
+    state,
+    addPlayer,
+    removePlayer,
+    exportTournament,
     resetTournament,
-    nextRound 
+    nextRound
   } = useTournament();
+  const { showSuccess } = useToast();
   
   const [activeTab, setActiveTab] = useState<'matches' | 'leaderboard'>('matches');
   const [showSettings, setShowSettings] = useState(false);
@@ -48,6 +53,16 @@ export function TournamentDashboard() {
       resetTournament();
     }
   };
+
+  const handleExportCSVLeaderboard = () => {
+    exportLeaderboardToCSV(tournament);
+    showSuccess('Leaderboard exported to CSV successfully!');
+  };
+
+  const handleExportCSVMatches = () => {
+    exportMatchHistoryToCSV(tournament);
+    showSuccess('Match history exported to CSV successfully!');
+  };
   
   const canAdvanceRound = () => {
     const currentRoundMatches = tournament.matches.filter(
@@ -57,22 +72,23 @@ export function TournamentDashboard() {
   };
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div className="flex items-center space-x-3 mb-4 md:mb-0">
-              <Trophy className="w-8 h-8 text-emerald-600" />
+              <Trophy className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">{tournament.name}</h1>
-                <p className="text-gray-600">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{tournament.name}</h1>
+                <p className="text-gray-600 dark:text-gray-300">
                   {tournament.mode === 'singles' ? 'Singles' : 'Doubles'} Tournament • {tournament.players.length} players
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-2">
+              <ThemeToggle />
               <Button
                 variant="outline"
                 size="sm"
@@ -81,7 +97,7 @@ export function TournamentDashboard() {
               >
                 Settings
               </Button>
-              
+
               {tournament.currentRound < tournament.totalRounds && canAdvanceRound() && (
                 <Button
                   variant="secondary"
@@ -135,33 +151,56 @@ export function TournamentDashboard() {
           size="lg"
         >
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button
-                variant="outline"
-                icon={Plus}
-                onClick={() => setShowAddPlayer(true)}
-                className="w-full"
-              >
-                Add Player
-              </Button>
-              
-              <Button
-                variant="outline"
-                icon={Download}
-                onClick={exportTournament}
-                className="w-full"
-              >
-                Export Tournament
-              </Button>
-              
-              <Button
-                variant="error"
-                icon={RotateCcw}
-                onClick={handleReset}
-                className="w-full"
-              >
-                Reset Tournament
-              </Button>
+            <div>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Export Options</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <Button
+                  variant="outline"
+                  icon={Download}
+                  onClick={exportTournament}
+                  className="w-full"
+                >
+                  Export JSON
+                </Button>
+                <Button
+                  variant="outline"
+                  icon={FileText}
+                  onClick={handleExportCSVLeaderboard}
+                  className="w-full"
+                >
+                  Export Leaderboard CSV
+                </Button>
+                <Button
+                  variant="outline"
+                  icon={FileText}
+                  onClick={handleExportCSVMatches}
+                  className="w-full"
+                >
+                  Export Matches CSV
+                </Button>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Tournament Management</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <Button
+                  variant="outline"
+                  icon={Plus}
+                  onClick={() => setShowAddPlayer(true)}
+                  className="w-full"
+                >
+                  Add Player
+                </Button>
+                <Button
+                  variant="error"
+                  icon={RotateCcw}
+                  onClick={handleReset}
+                  className="w-full"
+                >
+                  Reset Tournament
+                </Button>
+              </div>
             </div>
             
             <div>

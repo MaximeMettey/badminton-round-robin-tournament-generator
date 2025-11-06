@@ -3,10 +3,12 @@ import { Plus, Minus, Play, Users, Trophy, Upload } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { useTournament } from '../../contexts/TournamentContext';
+import { useToast } from '../../contexts/ToastContext';
 import { Modal } from '../ui/Modal';
 
 export function TournamentSetup() {
   const { createTournament, importTournament } = useTournament();
+  const { showError, showSuccess } = useToast();
   const [tournamentName, setTournamentName] = useState('');
   const [playerNames, setPlayerNames] = useState<string[]>(['', '']);
   const [mode, setMode] = useState<'singles' | 'doubles'>('singles');
@@ -34,23 +36,23 @@ export function TournamentSetup() {
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const validNames = playerNames.filter(name => name.trim() !== '');
     if (validNames.length < 2) {
-      alert('Please enter at least 2 players');
+      showError('Please enter at least 2 players');
       return;
     }
-    
+
     if (mode === 'doubles' && validNames.length < 4) {
-      alert('Doubles mode requires at least 4 players');
+      showError('Doubles mode requires at least 4 players');
       return;
     }
-    
+
     if (!tournamentName.trim()) {
-      alert('Please enter a tournament name');
+      showError('Please enter a tournament name');
       return;
     }
-    
+
     createTournament(
       tournamentName.trim(),
       validNames,
@@ -58,6 +60,7 @@ export function TournamentSetup() {
       totalRounds,
       { pointsToWin, requireTwoPointLead }
     );
+    showSuccess('Tournament created successfully!');
   };
 
   const handleImport = async () => {
@@ -66,8 +69,9 @@ export function TournamentSetup() {
         await importTournament(fileInput);
         setShowImport(false);
         setFileInput(null);
+        showSuccess('Tournament imported successfully!');
       } catch (error) {
-        alert('Failed to import tournament. Please make sure the file is valid.');
+        showError('Failed to import tournament. Please make sure the file is valid.');
       }
     }
   };

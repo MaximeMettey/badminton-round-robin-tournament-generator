@@ -7,7 +7,7 @@ export function saveTournament(tournament: Tournament): void {
     const serialized = JSON.stringify({
       ...tournament,
       createdAt: tournament.createdAt.toISOString(),
-      updatedAt: new Date().toISOString(),
+      updatedAt: tournament.updatedAt.toISOString(),
     });
     localStorage.setItem(STORAGE_KEY, serialized);
   } catch (error) {

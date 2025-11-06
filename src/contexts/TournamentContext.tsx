@@ -1,24 +1,25 @@
-import { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useReducer, useEffect, ReactNode, useMemo } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { 
-  Tournament, 
-  TournamentState, 
+import {
+  Tournament,
+  TournamentState,
   TournamentContextType,
   Player,
   Match
 } from '../types/tournament';
-import { 
-  saveTournament, 
-  loadTournament, 
-  clearTournament, 
+import {
+  saveTournament,
+  loadTournament,
+  clearTournament,
   exportTournamentData,
-  importTournamentData 
+  importTournamentData
 } from '../utils/storage';
-import { 
-  generateRoundRobinMatches, 
+import {
+  generateRoundRobinMatches,
   updatePlayerStats,
-  calculatePlayerPoints 
+  calculatePlayerPoints
 } from '../utils/matchmaking';
+import { debounce } from '../utils/debounce';
 
 type TournamentAction =
   | { type: 'SET_TOURNAMENT'; payload: Tournament }
@@ -293,19 +294,27 @@ const TournamentContext = createContext<TournamentContextType | undefined>(undef
 
 export function TournamentProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(tournamentReducer, initialState);
-  
+
+  // Debounced save function to avoid excessive localStorage writes
+  const debouncedSave = useMemo(
+    () => debounce((tournament: Tournament) => {
+      saveTournament(tournament);
+    }, 500),
+    []
+  );
+
   useEffect(() => {
     const savedTournament = loadTournament();
     if (savedTournament) {
       dispatch({ type: 'SET_TOURNAMENT', payload: savedTournament });
     }
   }, []);
-  
+
   useEffect(() => {
     if (state.tournament) {
-      saveTournament(state.tournament);
+      debouncedSave(state.tournament);
     }
-  }, [state.tournament]);
+  }, [state.tournament, debouncedSave]);
   
   const createTournament = (
     name: string,
@@ -322,7 +331,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       wins: 0,
       totalPointsScored: 0,
       gamesPlayed: 0,
-      idleRounds: [],
     }));
     
     const { matches, idleHistory } = generateRoundRobinMatches(players, mode, totalRounds);
@@ -336,7 +344,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       totalRounds,
       mode,
       matchFormat,
-      isActive: true,
       createdAt: new Date(),
       updatedAt: new Date(),
       idleHistory,
@@ -396,7 +403,6 @@ export function TournamentProvider({ children }: { children: ReactNode }) {
       wins: 0,
       totalPointsScored: 0,
       gamesPlayed: 0,
-      idleRounds: [],
     };
     dispatch({ type: 'ADD_PLAYER', payload: player });
   };

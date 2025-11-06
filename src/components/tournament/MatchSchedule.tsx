@@ -41,7 +41,7 @@ export function MatchSchedule() {
   };
 
   const goToPreviousRound = () => {
-    if (roundToView > 0) {
+    if (roundToView > 1) {
       setViewingRound(roundToView - 1);
     }
   };
@@ -180,7 +180,7 @@ export function MatchSchedule() {
                 variant="outline"
                 size="sm"
                 onClick={goToPreviousRound}
-                disabled={roundToView === 0}
+                disabled={roundToView <= 1}
                 className="!p-2"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -211,7 +211,7 @@ export function MatchSchedule() {
                   variant="outline"
                   size="sm"
                   onClick={goToPreviousRound}
-                  disabled={roundToView === 0}
+                  disabled={roundToView <= 1}
                   className="!p-2"
                 >
                   <ChevronLeft className="w-4 h-4" />

@@ -6,7 +6,6 @@ export interface Player {
   wins: number;
   totalPointsScored: number;
   gamesPlayed: number;
-  idleRounds: number[]; // Track which rounds this player was idle
 }
 
 export interface Match {
@@ -36,7 +35,6 @@ export interface Tournament {
     pointsToWin: number;
     requireTwoPointLead: boolean;
   };
-  isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
   idleHistory: { [round: number]: string[] }; // Track idle players per round

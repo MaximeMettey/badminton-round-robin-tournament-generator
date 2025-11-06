@@ -1,22 +1,25 @@
+import { useMemo } from 'react';
 import { Trophy, Medal, Award, TrendingUp } from 'lucide-react';
 import { useTournament } from '../../contexts/TournamentContext';
 
 export function Leaderboard() {
   const { state } = useTournament();
-  
+
   if (!state.tournament) return null;
-  
+
   const { tournament } = state;
-  
-  // Sort players by average points per match (descending), then by wins
-  const sortedPlayers = [...tournament.players].map(player => ({
-    ...player,
-    avgPoints: player.matchesPlayed > 0 ? player.totalPointsScored / player.matchesPlayed : 0
-  })).sort((a, b) => {
-    if (a.avgPoints !== b.avgPoints) return b.avgPoints - a.avgPoints;
-    if (a.wins !== b.wins) return b.wins - a.wins;
-    return 0;
-  });
+
+  // Memoize sorted players to avoid recalculating on every render
+  const sortedPlayers = useMemo(() => {
+    return [...tournament.players].map(player => ({
+      ...player,
+      avgPoints: player.matchesPlayed > 0 ? player.totalPointsScored / player.matchesPlayed : 0
+    })).sort((a, b) => {
+      if (a.avgPoints !== b.avgPoints) return b.avgPoints - a.avgPoints;
+      if (a.wins !== b.wins) return b.wins - a.wins;
+      return 0;
+    });
+  }, [tournament.players]);
   
   const getRankIcon = (rank: number) => {
     switch (rank) {

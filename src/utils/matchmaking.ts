@@ -129,7 +129,6 @@ function generateDoublesMatches(
     idlePlayersCount = 1;
   }
 
-  console.log(`Round ${round}: ${totalPlayers} players -> ${doublesMatches} doubles, ${singlesMatches} singles, ${idlePlayersCount} idle`);
 
   // Sort players by idle priority (those who haven't been idle should be idle first)
   const playersWithIdlePriority = players.map(player => ({
@@ -167,8 +166,6 @@ function generateDoublesMatches(
     players.filter(p => !selectedIdlePlayers.some(idle => idle.id === p.id))
   );
   
-  console.log(`Available players after idle selection: ${availablePlayers.length}`);
-  
   // Create doubles matches
   for (let i = 0; i < doublesMatches && availablePlayers.length >= 4; i++) {
     const team1 = availablePlayers.splice(0, 2);
@@ -183,7 +180,6 @@ function generateDoublesMatches(
       isDoubles: true,
     });
     matchId++;
-    console.log(`Created doubles match ${i + 1}: ${team1[0].name} & ${team1[1].name} vs ${team2[0].name} & ${team2[1].name}`);
   }
   
   // Create singles matches
@@ -201,10 +197,7 @@ function generateDoublesMatches(
       isSingles: true,
     });
     matchId++;
-    console.log(`Created singles match ${i + 1}: ${player1.name} vs ${player2.name}`);
   }
-
-  console.log(`Final round ${round} result: ${matches.length} matches (${matches.filter(m => m.isDoubles).length} doubles, ${matches.filter(m => !m.isDoubles).length} singles), ${idlePlayers.length} idle players`);
 
   return { roundMatches: matches, idlePlayers };
 }
